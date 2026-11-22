@@ -365,10 +365,11 @@
   // returns hit rects in screen px
   Game.towerUI = function () {
     const S = this.S;
-    const jump = { x: this.sx(2.0), y: this.sy(4.15), w: 3.1 * S, h: 0.95 * S };
-    const hp = { x: this.sx(2.0), y: this.sy(5.8), w: 3.1 * S, h: 0.6 * S };
-    const sta = { x: this.sx(2.0), y: this.sy(4.95), w: 3.1 * S, h: 0.6 * S };
-    const slots = (this.slots || []).map((id, i) => ({ id, x: this.sx(0.15), y: this.sy(5.85 - i * 0.98), w: 1.7 * S, h: 0.92 * S }));
+    const T = C.TOWER_TOP;
+    const hp = { x: this.sx(2.0), y: this.sy(T - 0.2), w: 3.1 * S, h: 0.5 * S };
+    const sta = { x: this.sx(2.0), y: this.sy(T - 0.88), w: 3.1 * S, h: 0.5 * S };
+    const jump = { x: this.sx(2.0), y: this.sy(T - 1.6), w: 3.1 * S, h: 0.95 * S };
+    const slots = (this.slots || []).map((id, i) => ({ id, x: this.sx(0.15), y: this.sy(T - 0.15 - i * 0.84), w: 1.7 * S, h: 0.78 * S }));
     return { jump, hp, sta, slots };
   };
 
@@ -414,7 +415,7 @@
     const p = this.player, a = p.aimState;
     if (!a.active || !p.aim) return null;
     const h = p.hand('bow'), phi = p.aim.phi;
-    const speed = G.lerp(12, 36, Math.pow(Math.max(a.charge, 0.25), 0.85));
+    const speed = this.arrowSpeed(Math.max(a.charge, 0.25));
     let x = h.x + Math.cos(phi) * 0.25, y = h.y + Math.sin(phi) * 0.25, vx = Math.cos(phi) * speed, vy = Math.sin(phi) * speed;
     const pts = [];
     for (let t = 0; t < 1.5; t += 0.045) {

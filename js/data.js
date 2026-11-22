@@ -2,11 +2,11 @@
 (function (G) {
   G.C = {
     GRAV: -22,          // ragdoll gravity (m/s^2)
-    ARROW_G: 20,        // arrow gravity
+    ARROW_G: 12,        // arrow gravity (lower = slower, floatier arcs)
     DT: 1 / 120,        // fixed physics step
-    VIEW_H: 15,         // visible world height in metres
-    Y_MIN: -1.5,        // world y at bottom of the screen
-    TOWER_TOP: 6.0,
+    VIEW_H: 12,         // visible world height in metres
+    Y_MIN: -1.0,        // world y at bottom of the screen
+    TOWER_TOP: 4.5,
     TOWER_X0: -2.0,
     TOWER_X1: 5.4,
     PLAYER_X: 3.0,

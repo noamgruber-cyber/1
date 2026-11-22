@@ -21,7 +21,7 @@
     const p = this.player, st = this.stats;
     const type = G.ARROW_BY_ID[p.arrowType] || G.ARROWS[0];
     if (this.state === 'menu') this.startRun();
-    const speed = lerp(12, 36, Math.pow(charge, 0.85));
+    const speed = this.arrowSpeed(charge);
     const dmg = st.dmg * type.dmg * lerp(0.55, 1.15, charge);
     p.sta = Math.max(0, p.sta - 4 * type.sta);
     const phi = p.aim ? p.aim.phi : p.aimState.phi;
@@ -156,7 +156,7 @@
 
     let hpDmg = dmg * mult;
     // knockback impulse at the point of impact
-    const imp = (a.mini ? 0.005 : a.heavy ? 0.07 : 0.013) * sp;
+    const imp = (a.mini ? 0.009 : a.heavy ? 0.12 : 0.022) * sp;
     body.applyLinearImpulse(V(dx * imp, dy * imp), V(pt.x, pt.y), true);
     // embed
     this.stick(a, body, pt, rig.stuck);

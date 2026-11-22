@@ -96,7 +96,7 @@
     const S = G.Save;
     this.stats = {
       maxHp: S.value('health'), maxSta: S.value('stamina'), regen: S.value('refresh'),
-      pullRate: S.value('pull') * 0.13, dmg: S.value('damage'),
+      pullRate: S.value('pull') * 0.24, dmg: S.value('damage'),
       lives: S.value('lives'), armor: S.value('armor'),
     };
   };
@@ -135,7 +135,7 @@
     for (const e of this.enemies) this.removeEnemy(e);
     this.enemies.length = 0;
     const L = G.LAYOUTS[0];
-    this.spawnEnemy('plain', L, this.viewW * 0.69, 5.2, { frozen: true, grace: 0 });
+    this.spawnEnemy('plain', L, Math.min(this.viewW * 0.69, C.TOWER_X1 + 15), 4.2, { frozen: true, grace: 0 });
   };
 
   /* ------------------------------------------------------------ platforms & enemies */
@@ -201,35 +201,35 @@
 
   Game.waveSpec = function (n) {
     return {
-      count: Math.min(6, 1 + Math.floor(n / 2)),
+      count: Math.min(5, 1 + Math.floor(n / 2)),
       lightP: clamp((n - 1) * 0.12, 0, 0.5), heavyP: clamp((n - 3) * 0.07, 0, 0.45),
       err: Math.max(0.8, 7 - 0.45 * n) * Math.PI / 180,
-      reload: [Math.max(1.5, 3.6 - 0.18 * n), Math.max(2.4, 5.2 - 0.25 * n)],
-      speed: [26 + 0.4 * n, 32 + 0.5 * n],
+      reload: [Math.max(2.0, 4.4 - 0.18 * n), Math.max(3.0, 6.2 - 0.25 * n)],
+      speed: [Math.min(20, 15 + 0.25 * n), Math.min(23, 18 + 0.3 * n)],
       hpScale: 1 + 0.05 * (n - 1),
       dmg: 10 + 1.1 * n,
-      drawDur: Math.max(0.7, 1.15 - 0.03 * n),
+      drawDur: Math.max(0.9, 1.45 - 0.035 * n),
     };
   };
 
   Game.spawnWave = function (n) {
     const ws = this.waveSpec(n);
     const spots = [];
-    const x0 = Math.max(C.TOWER_X1 + 3, this.viewW * 0.4) + 1.6, x1 = this.viewW * 0.9 - 1.6;
+    const x0 = C.TOWER_X1 + 5.5, x1 = Math.max(x0 + 3, Math.min(this.viewW * 0.88, C.TOWER_X1 + 19) - 1.6);
     for (let i = 0; i < ws.count; i++) {
       let best = null;
       for (let tries = 0; tries < 40; tries++) {
-        const ax = rand(x0, Math.max(x0 + 1, x1)), ay = rand(4.3, 10.2);
-        if (spots.every((s) => Math.abs(s.ax - ax) > 4.6 || Math.abs(s.ay - ay) > 3.4)) { best = { ax, ay }; break; }
+        const ax = rand(x0, x1), ay = rand(3.0, 8.2);
+        if (spots.every((s) => Math.abs(s.ax - ax) > 4.2 || Math.abs(s.ay - ay) > 3.0)) { best = { ax, ay }; break; }
       }
-      if (!best) best = { ax: rand(x0, x1), ay: rand(4.3, 10.2) };
+      if (!best) best = { ax: rand(x0, x1), ay: rand(3.0, 8.2) };
       spots.push(best);
     }
     spots.forEach((s, i) => {
       const r = Math.random();
       const type = r < ws.heavyP ? 'heavy' : r < ws.heavyP + ws.lightP ? 'light' : 'plain';
       let layout = pick(G.LAYOUTS);
-      if (layout.id === 'stairs' && s.ay < 6.2) layout = G.LAYOUTS[0];
+      if (layout.id === 'stairs' && s.ay < 4.8) layout = G.LAYOUTS[0];
       this.spawnEnemy(type, layout, s.ax, s.ay, { grace: rand(1.4, 3.2) + i * 0.6 });
     });
     this.banner('WAVE ' + n);
@@ -348,7 +348,7 @@
       let phi = a.phi;
       if (G.Save.d.settings.magnet && this.state !== 'menu') {
         // gentle magnet: when the aim is already close to a ballistic solution, pull it the rest of the way
-        const v = lerp(12, 36, Math.pow(Math.max(a.charge, 0.25), 0.85)), h = p.hand('bow');
+        const v = this.arrowSpeed(Math.max(a.charge, 0.25)), h = p.hand('bow');
         let best = null;
         for (const e of this.enemies) {
           if (!e.rig.alive) continue;
@@ -362,6 +362,9 @@
     } else p.setAim(a.phi * 0.5 + 0.1, 0);
     p.aim.phi += p.aimErr;
   };
+
+  // player launch speed for a given draw (0..1)
+  Game.arrowSpeed = function (charge) { return lerp(8, 21, Math.pow(Math.max(0, charge), 0.8)); };
 
   Game.controlFrac = function () { return this.state === 'menu' ? C.CONTROL_FRAC : 0.5; };
 
@@ -467,8 +470,8 @@
         this.appleTimer = rand(6, 11);
         const r = Math.random();
         const type = r < 0.45 ? 'red' : r < 0.85 ? 'green' : 'gold';
-        const x = rand(C.TOWER_X1 + 4, this.viewW * 0.55);
-        this.apples.push({ x, y: rand(6.5, 12), y0: 0, type, t: 0, ph: rand(0, 6.28), vx: rand(-0.5, 0.3), life: 16 });
+        const x = rand(C.TOWER_X1 + 3, C.TOWER_X1 + 9);
+        this.apples.push({ x, y: rand(5.2, 9.3), y0: 0, type, t: 0, ph: rand(0, 6.28), vx: rand(-0.5, 0.3), life: 16 });
       }
     }
   };
