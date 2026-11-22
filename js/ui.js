@@ -171,14 +171,15 @@
       <label class="set">SOUND <input id="s-sfx" type="range" min="0" max="1" step="0.05" value="${st.sfx}"></label>
       <label class="set">AIM SENSITIVITY <input id="s-sens" type="range" min="0.5" max="2" step="0.1" value="${st.sens}"></label>
       <label class="set">HAPTICS <button class="tog ${st.haptics ? 'on' : ''}" id="s-hap">${st.haptics ? 'ON' : 'OFF'}</button></label>
-      <label class="set">AIM ASSIST LINE <button class="tog ${st.assist ? 'on' : ''}" id="s-asi">${st.assist ? 'ON' : 'OFF'}</button></label>
+      <label class="set">AIM GUIDE LINE <button class="tog ${st.guide ? 'on' : ''}" id="s-gui">${st.guide ? 'ON' : 'OFF'}</button></label>
+      <label class="set">AIM MAGNET <button class="tog ${st.magnet ? 'on' : ''}" id="s-mag">${st.magnet ? 'ON' : 'OFF'}</button></label>
       <div class="row"><button class="small" id="s-reset">RESET PROGRESS</button></div>`, 'settings');
     wireClose();
     $('#s-sfx').addEventListener('input', (e) => { st.sfx = +e.target.value; G.Save.save(); });
     $('#s-sfx').addEventListener('change', () => G.Audio.pickup());
     $('#s-sens').addEventListener('input', (e) => { st.sens = +e.target.value; G.Save.save(); });
     const tog = (id, key) => $(id).addEventListener('click', (e) => { st[key] = !st[key]; e.target.classList.toggle('on', st[key]); e.target.textContent = st[key] ? 'ON' : 'OFF'; G.Save.save(); G.Audio.click(); });
-    tog('#s-hap', 'haptics'); tog('#s-asi', 'assist');
+    tog('#s-hap', 'haptics'); tog('#s-gui', 'guide'); tog('#s-mag', 'magnet');
     $('#s-reset').addEventListener('click', (e) => {
       if (e.target.dataset.sure) { G.Save.reset(); G.Game.toMenu(); return; }
       e.target.dataset.sure = 1; e.target.textContent = 'TAP AGAIN TO CONFIRM';

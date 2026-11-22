@@ -12,7 +12,7 @@
     leaders: [],           // {kills, wave, t}
     skin: 'gold',
     skins: ['gold'],
-    settings: { sfx: 0.8, haptics: true, assist: false, sens: 1.0 },
+    settings: { sfx: 0.8, haptics: true, guide: true, magnet: true, sens: 1.0 },
   });
   let data = DEFAULT();
   let mem = null;

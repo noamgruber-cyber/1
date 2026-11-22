@@ -16,7 +16,7 @@
       if (inRect(u.jump, x, y) && game.player.alive) { game.jumpDown = true; game.jump(); game.jumpPid = e.pointerId; cv.setPointerCapture(e.pointerId); return; }
       for (let i = 0; i < u.slots.length; i++) if (inRect(u.slots[i], x, y)) { game.selectSlot(i); return; }
       const a = game.player.aimState;
-      if (x < game.W * G.C.CONTROL_FRAC && !a.active && game.state !== 'over' && game.state !== 'dying') {
+      if (x < game.W * game.controlFrac() && !a.active && game.state !== 'over' && game.state !== 'dying') {
         game.beginAim(e.pointerId, x, y);
         cv.setPointerCapture(e.pointerId);
       }

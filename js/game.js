@@ -96,7 +96,7 @@
     const S = G.Save;
     this.stats = {
       maxHp: S.value('health'), maxSta: S.value('stamina'), regen: S.value('refresh'),
-      pullRate: S.value('pull') * 0.08, dmg: S.value('damage'),
+      pullRate: S.value('pull') * 0.13, dmg: S.value('damage'),
       lives: S.value('lives'), armor: S.value('armor'),
     };
   };
@@ -344,10 +344,26 @@
       p.regenDelay -= dt;
       if (p.regenDelay <= 0) p.sta = Math.min(st.maxSta, p.sta + st.regen * dt);
     }
-    if (a.active) p.setAim(a.phi, a.charge);
-    else p.setAim(a.phi * 0.5 + 0.1, 0);
+    if (a.active) {
+      let phi = a.phi;
+      if (G.Save.d.settings.magnet && this.state !== 'menu') {
+        // gentle magnet: when the aim is already close to a ballistic solution, pull it the rest of the way
+        const v = lerp(12, 36, Math.pow(Math.max(a.charge, 0.25), 0.85)), h = p.hand('bow');
+        let best = null;
+        for (const e of this.enemies) {
+          if (!e.rig.alive) continue;
+          const t = e.rig.torso.getPosition(), ideal = this.solveAngle(h.x, h.y, t.x, t.y, v), d = Math.abs(ideal - phi);
+          if (d < 0.09 && (!best || d < best.d)) best = { d, ideal };
+        }
+        if (best) phi += (best.ideal - phi) * 0.65;
+      }
+      a.phiEff = phi;
+      p.setAim(phi, a.charge);
+    } else p.setAim(a.phi * 0.5 + 0.1, 0);
     p.aim.phi += p.aimErr;
   };
+
+  Game.controlFrac = function () { return this.state === 'menu' ? C.CONTROL_FRAC : 0.5; };
 
   Game.beginAim = function (pid, x, y) {
     const a = this.player.aimState;
@@ -358,8 +374,13 @@
   };
   Game.moveAim = function (x, y) {
     const a = this.player.aimState; a.x = x; a.y = y;
-    const dx = a.ax - x, dy = y - a.ay;
-    if (Math.hypot(dx, dy) > 10) {
+    let dx = a.ax - x, dy = y - a.ay;
+    const len = Math.hypot(dx, dy), MAX = 90;
+    if (len > MAX) {            // floating anchor: it follows the finger so you never run out of screen
+      const k = (len - MAX) / len;
+      a.ax -= dx * k; a.ay += dy * k; dx = a.ax - x; dy = y - a.ay;
+    }
+    if (Math.hypot(dx, dy) > 6) {
       a.moved = true;
       const sens = G.Save.d.settings.sens;
       a.phi = clamp(Math.atan2(dy * sens, dx), -0.55, 1.5);

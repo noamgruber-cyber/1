@@ -414,7 +414,7 @@
     const p = this.player, a = p.aimState;
     if (!a.active || !p.aim) return null;
     const h = p.hand('bow'), phi = p.aim.phi;
-    const speed = G.lerp(12, 36, Math.pow(Math.max(a.charge, 0.6), 0.85));
+    const speed = G.lerp(12, 36, Math.pow(Math.max(a.charge, 0.25), 0.85));
     let x = h.x + Math.cos(phi) * 0.25, y = h.y + Math.sin(phi) * 0.25, vx = Math.cos(phi) * speed, vy = Math.sin(phi) * speed;
     const pts = [];
     for (let t = 0; t < 1.5; t += 0.045) {
@@ -460,7 +460,7 @@
       ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(a.x, a.y, 9, 0, 6.3); ctx.fill();
     }
     // dotted trajectory (onboarding in menu / optional assist)
-    if (a.active && (this.state === 'menu' || G.Save.d.settings.assist)) {
+    if (a.active && (this.state === 'menu' || G.Save.d.settings.guide)) {
       const pts = this.trajectory();
       if (pts) { ctx.fillStyle = 'rgba(255,255,255,0.7)'; pts.forEach((q, i) => { ctx.globalAlpha = 1 - i / pts.length; ctx.beginPath(); ctx.arc(this.sx(q[0]), this.sy(q[1]), 2.4, 0, 6.3); ctx.fill(); }); ctx.globalAlpha = 1; }
     }
