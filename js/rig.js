@@ -5,29 +5,32 @@
   const CAT = { TERRAIN: 1, CHAR: 2, DEBRIS: 4 };
   G.CAT = CAT;
 
+  // chunky proportions (matches the reference look: thick capsule limbs, big head)
   const DIM = {
-    head: { r: 0.2 },
-    uTorso: { hw: 0.15, hh: 0.28 },
-    pelvis: { hw: 0.14, hh: 0.13 },
-    uArmL: { hw: 0.06, hh: 0.2 }, lArmL: { hw: 0.055, hh: 0.2 },
-    uArmR: { hw: 0.06, hh: 0.2 }, lArmR: { hw: 0.055, hh: 0.2 },
-    uLegL: { hw: 0.08, hh: 0.26 }, lLegL: { hw: 0.07, hh: 0.26 },
-    uLegR: { hw: 0.08, hh: 0.26 }, lLegR: { hw: 0.07, hh: 0.26 },
+    head: { r: 0.27 },
+    uTorso: { hw: 0.25, hh: 0.31 },
+    pelvis: { hw: 0.21, hh: 0.14 },
+    uArmL: { hw: 0.1, hh: 0.21 }, lArmL: { hw: 0.095, hh: 0.21 },
+    uArmR: { hw: 0.1, hh: 0.21 }, lArmR: { hw: 0.095, hh: 0.21 },
+    uLegL: { hw: 0.12, hh: 0.27 }, lLegL: { hw: 0.11, hh: 0.27 },
+    uLegR: { hw: 0.12, hh: 0.27 }, lLegR: { hw: 0.11, hh: 0.27 },
   };
   const PARTS = Object.keys(DIM);
+  const D = DIM, SH_Y = D.uTorso.hh - 0.09;            // shoulder height on the torso
+  const ARM_L = D.uArmL.hh * 2, REACH = ARM_L * 2;     // segment length / full reach
   // L = front arm (holds bow) / front leg ; R = draw arm / back leg
   // pa/ca = anchors in parent/child local space (facing-right frame); lo/hi = limits; key = pose key
   const JOINTS = [
-    { n: 'spine', p: 'pelvis', c: 'uTorso', pa: [0, 0.13], ca: [0, -0.28], lo: -0.6, hi: 0.5, k: 'spine', sub: ['uTorso', 'head', 'uArmL', 'lArmL', 'uArmR', 'lArmR'], str: 1.2 },
-    { n: 'neck', p: 'uTorso', c: 'head', pa: [0, 0.28], ca: [0, -0.2], lo: -0.7, hi: 0.7, k: 'neck', sub: ['head'], str: 0.7 },
-    { n: 'shL', p: 'uTorso', c: 'uArmL', pa: [0.02, 0.2], ca: [0, 0.2], lo: -1.8, hi: 3.4, k: 'shL', sub: ['uArmL', 'lArmL'], str: 1 },
-    { n: 'elL', p: 'uArmL', c: 'lArmL', pa: [0, -0.2], ca: [0, 0.2], lo: -2.7, hi: 2.7, k: 'elL', sub: ['lArmL'], str: 1 },
-    { n: 'shR', p: 'uTorso', c: 'uArmR', pa: [-0.02, 0.2], ca: [0, 0.2], lo: -1.8, hi: 3.4, k: 'shR', sub: ['uArmR', 'lArmR'], str: 1 },
-    { n: 'elR', p: 'uArmR', c: 'lArmR', pa: [0, -0.2], ca: [0, 0.2], lo: -2.7, hi: 2.7, k: 'elR', sub: ['lArmR'], str: 1 },
-    { n: 'hipL', p: 'pelvis', c: 'uLegL', pa: [0.04, -0.13], ca: [0, 0.26], lo: -1.7, hi: 1.7, k: 'hipL', sub: ['uLegL', 'lLegL'], str: 1.3 },
-    { n: 'knL', p: 'uLegL', c: 'lLegL', pa: [0, -0.26], ca: [0, 0.26], lo: -2.7, hi: 0.05, k: 'knL', sub: ['lLegL'], str: 1.3 },
-    { n: 'hipR', p: 'pelvis', c: 'uLegR', pa: [-0.04, -0.13], ca: [0, 0.26], lo: -1.7, hi: 1.7, k: 'hipR', sub: ['uLegR', 'lLegR'], str: 1.3 },
-    { n: 'knR', p: 'uLegR', c: 'lLegR', pa: [0, -0.26], ca: [0, 0.26], lo: -2.7, hi: 0.05, k: 'knR', sub: ['lLegR'], str: 1.3 },
+    { n: 'spine', p: 'pelvis', c: 'uTorso', pa: [0, D.pelvis.hh], ca: [0, -D.uTorso.hh], lo: -0.6, hi: 0.5, k: 'spine', sub: ['uTorso', 'head', 'uArmL', 'lArmL', 'uArmR', 'lArmR'], str: 1.2 },
+    { n: 'neck', p: 'uTorso', c: 'head', pa: [0, D.uTorso.hh], ca: [0, -D.head.r * 0.85], lo: -0.7, hi: 0.7, k: 'neck', sub: ['head'], str: 0.7 },
+    { n: 'shL', p: 'uTorso', c: 'uArmL', pa: [0.03, SH_Y], ca: [0, D.uArmL.hh], lo: -1.8, hi: 3.4, k: 'shL', sub: ['uArmL', 'lArmL'], str: 1 },
+    { n: 'elL', p: 'uArmL', c: 'lArmL', pa: [0, -D.uArmL.hh], ca: [0, D.lArmL.hh], lo: -2.7, hi: 2.7, k: 'elL', sub: ['lArmL'], str: 1 },
+    { n: 'shR', p: 'uTorso', c: 'uArmR', pa: [-0.03, SH_Y], ca: [0, D.uArmR.hh], lo: -1.8, hi: 3.4, k: 'shR', sub: ['uArmR', 'lArmR'], str: 1 },
+    { n: 'elR', p: 'uArmR', c: 'lArmR', pa: [0, -D.uArmR.hh], ca: [0, D.lArmR.hh], lo: -2.7, hi: 2.7, k: 'elR', sub: ['lArmR'], str: 1 },
+    { n: 'hipL', p: 'pelvis', c: 'uLegL', pa: [0.07, -D.pelvis.hh], ca: [0, D.uLegL.hh], lo: -1.7, hi: 1.7, k: 'hipL', sub: ['uLegL', 'lLegL'], str: 1.3 },
+    { n: 'knL', p: 'uLegL', c: 'lLegL', pa: [0, -D.uLegL.hh], ca: [0, D.lLegL.hh], lo: -2.7, hi: 0.05, k: 'knL', sub: ['lLegL'], str: 1.3 },
+    { n: 'hipR', p: 'pelvis', c: 'uLegR', pa: [-0.07, -D.pelvis.hh], ca: [0, D.uLegR.hh], lo: -1.7, hi: 1.7, k: 'hipR', sub: ['uLegR', 'lLegR'], str: 1.3 },
+    { n: 'knR', p: 'uLegR', c: 'lLegR', pa: [0, -D.uLegR.hh], ca: [0, D.lLegR.hh], lo: -2.7, hi: 0.05, k: 'knR', sub: ['lLegR'], str: 1.3 },
   ];
   const POSES = {
     stand: { spine: 0, neck: 0, shL: 0.45, elL: 0.55, shR: 0.12, elR: 0.3, hipL: 0.06, knL: 0, hipR: -0.06, knR: 0 },
@@ -92,7 +95,7 @@
       this.build(o);
       for (const a of o.armor || []) this.armor.push(Object.assign({ worn: true, maxDur: a.dur, flash: 0 }, a));
       // the root is given extra rotational inertia so the balance assist stays stable
-      this.b.pelvis.setMassData({ mass: this.b.pelvis.getMass(), center: V(0, 0), I: 0.03 });
+      this.b.pelvis.setMassData({ mass: this.b.pelvis.getMass(), center: V(0, 0), I: 0.07 });
       let m = 0; for (const p of PARTS) m += this.b[p].getMass();
       this.mass = m;
     }
@@ -138,9 +141,9 @@
     // world position of bow hand (front arm tip) / draw hand
     hand(side) {
       const b = this.b[side === 'bow' ? 'lArmL' : 'lArmR'];
-      return b.getWorldPoint(V(0, -0.2));
+      return b.getWorldPoint(V(0, -D.lArmL.hh));
     }
-    shoulder() { return this.b.uTorso.getWorldPoint(V(0.02 * this.dir, 0.2)); }
+    shoulder() { return this.b.uTorso.getWorldPoint(V(0.03 * this.dir, SH_Y)); }
     // aiming direction of the bow arm as it really is
     actualAim() {
       const s = this.shoulder(), h = this.hand('bow');
@@ -204,7 +207,7 @@
         const fx = clamp(W * 7 * (this.homeX - pp.x) - W * 1.8 * pv.x, -W * 1.6, W * 1.6);
         pel.applyForceToCenter(V(fx, fy), true);
         const pa = pel.getAngle(), pw = pel.getAngularVelocity();
-        pel.applyTorque(40 * (0 - pa) - 2.4 * pw, true);
+        pel.applyTorque(this.mass * (40 * (0 - pa) - 2.6 * pw), true);
       } else if (this.stun > 0) {
         const W = this.mass * -G.C.GRAV;
         if (!this.lostFooting) pel.applyForceToCenter(V(0, clamp(W * 10 * (this.pelvisTargetY - pp.y), 0, W * 1.1)), true);
@@ -229,9 +232,9 @@
       const th = phiF + Math.PI / 2;
       tgt.shL = th - torsoF; tgt.elL = 0;
       // draw arm: 2-bone IK so the hand sits at the nock
-      const d = 0.8 - (0.14 + 0.4 * a.pull);
+      const d = REACH - (0.16 + 0.42 * a.pull);
       const u = [Math.cos(phiF), Math.sin(phiF)], n = [-u[1], u[0]];
-      const L = 0.4, h = Math.sqrt(Math.max(0, L * L - (d / 2) * (d / 2)));
+      const L = ARM_L, h = Math.sqrt(Math.max(0, L * L - (d / 2) * (d / 2)));
       const E = [u[0] * d / 2 + n[0] * h, u[1] * d / 2 + n[1] * h];
       const T = [u[0] * d, u[1] * d];
       const p1 = Math.atan2(E[1], E[0]), p2 = Math.atan2(T[1] - E[1], T[0] - E[0]);
@@ -252,7 +255,7 @@
       const h = this.hand('bow'), s = this.shoulder();
       const bow = this.world.createBody({ type: 'dynamic', position: h, angle: Math.atan2(h.y - s.y, h.x - s.x) + Math.PI / 2, angularDamping: 0.1 });
       bow.createFixture({
-        shape: new pl.Box(0.04, 0.7), density: 0.6, friction: 0.5, restitution: 0.2,
+        shape: new pl.Box(0.05, 0.9), density: 0.6, friction: 0.5, restitution: 0.2,
         filterGroupIndex: this.group, filterCategoryBits: CAT.DEBRIS, filterMaskBits: CAT.TERRAIN,
       });
       const lv = this.b.lArmL.getLinearVelocity();
@@ -269,5 +272,5 @@
   }
 
   G.Rig = Rig;
-  G.RIG = { DIM, PARTS, JOINTS, POSES, FK };
+  G.RIG = { DIM, PARTS, JOINTS, POSES, FK, REACH };
 })(window.G);

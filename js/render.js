@@ -102,45 +102,36 @@
   };
 
   /* ------------------------------------------------------------ stone */
-  function block(ctx, w, h, alpha) {
+  function block(ctx, w, h, alpha, tone) {
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = STONE; ctx.fillRect(-w / 2, -h / 2, w, h);
-    ctx.fillStyle = 'rgba(255,255,255,0.13)'; ctx.fillRect(-w / 2, h / 2 - 0.09, w, 0.09); // top (y up)
-    ctx.fillRect(-w / 2, -h / 2, 0.07, h);
-    ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fillRect(-w / 2, -h / 2, w, 0.09);
-    ctx.fillRect(w / 2 - 0.07, -h / 2, 0.07, h);
-    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 0.025; ctx.strokeRect(-w / 2 + 0.01, -h / 2 + 0.01, w - 0.02, h - 0.02);
+    ctx.fillStyle = tone || STONE; ctx.fillRect(-w / 2, -h / 2, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,0.07)'; ctx.fillRect(-w / 2, h / 2 - 0.06, w, 0.06);
+    ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fillRect(-w / 2, -h / 2, w, 0.05); ctx.fillRect(w / 2 - 0.04, -h / 2, 0.04, h);
     ctx.globalAlpha = 1;
   }
+  G.HUD_FONT = 'Rye, "Rockwell Extra Bold", Rockwell, Georgia, serif';
 
+  // the tower: three columns of square stones with merlons on the outer corners
   Game.drawTower = function (ctx) {
-    const x0 = C.TOWER_X0, x1 = C.TOWER_X1, top = C.TOWER_TOP, y0 = C.Y_MIN - 1;
-    ctx.fillStyle = '#5f5f5f'; ctx.fillRect(x0, y0, x1 - x0, top - y0);
-    // brick courses
-    ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.lineWidth = 0.03;
-    ctx.beginPath();
-    let row = 0;
-    for (let y = top; y > y0; y -= 1) {
-      ctx.moveTo(x0, y); ctx.lineTo(x1, y);
-      for (let x = x0 + (row % 2 ? 0.75 : 0.25); x < x1; x += 1.5) { ctx.moveTo(x, y); ctx.lineTo(x, y - 1); }
-      row++;
+    const x0 = C.TOWER_X0, x1 = C.TOWER_X1, top = C.TOWER_TOP, w = (x1 - x0) / 3;
+    for (let y = top; y > C.Y_MIN - w; y -= w) {
+      for (let i = 0; i < 3; i++) {
+        ctx.save(); ctx.translate(x0 + w * (i + 0.5), y - w / 2);
+        block(ctx, w - 0.03, w - 0.03, 1, '#6E6E6E'); ctx.restore();
+      }
     }
-    ctx.stroke();
-    // bevel
-    ctx.fillStyle = 'rgba(255,255,255,0.16)'; ctx.fillRect(x0, top - 0.12, x1 - x0, 0.12);
-    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(x1 - 0.1, y0, 0.1, top - y0);
-    // battlements
-    ctx.fillStyle = STONE;
-    for (const [bx, bw] of [[x1 - 0.9, 0.9], [0.2, 0.8], [1.5, 0.8]]) { ctx.fillRect(bx, top, bw, 0.5); }
-    ctx.fillStyle = 'rgba(255,255,255,0.14)'; for (const [bx, bw] of [[x1 - 0.9, 0.9], [0.2, 0.8], [1.5, 0.8]]) ctx.fillRect(bx, top + 0.4, bw, 0.1);
+    ctx.fillStyle = '#6E6E6E';
+    ctx.fillRect(x0, top - 0.02, 0.42, 0.36); ctx.fillRect(x1 - 0.42, top - 0.02, 0.42, 0.36);
+    ctx.fillStyle = 'rgba(255,255,255,0.07)'; ctx.fillRect(x0, top + 0.28, 0.42, 0.06); ctx.fillRect(x1 - 0.42, top + 0.28, 0.42, 0.06);
   };
 
   Game.drawPlatforms = function (ctx) {
+    const B = C.BLOCK;
     for (const p of this.platforms) {
       for (const b of p.blocks) {
         const q = b.getPosition();
         ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(b.getAngle());
-        block(ctx, 1, 1, p.alpha);
+        block(ctx, B - 0.02, B - 0.02, p.alpha, '#666666');
         ctx.restore();
       }
     }
@@ -152,91 +143,100 @@
     ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(b.getAngle()); fn(); ctx.restore();
   }
 
-  Game.drawRig = function (ctx, rig, isMenuDummy) {
+  Game.drawRig = function (ctx, rig) {
     if (!rig.b.head) return;
-    const D = G.RIG.DIM, b = rig.b, dir = rig.dir;
+    const D = G.RIG.DIM, b = rig.b;
     ctx.globalAlpha = rig.alpha;
-    const col = (n, back) => mix(back ? '#D6D6D6' : '#FFFFFF', RED, rig.tint[n]);
+    const col = (n, back) => mix(back ? '#C9C9C9' : '#F2F2F2', RED, rig.tint[n]);
     const capsule = (n, back) => bodyFrame(ctx, b[n], () => {
-      const d = D[n]; ctx.fillStyle = col(n, back); G.rrect(ctx, -d.hw, -d.hh, d.hw * 2, d.hh * 2, d.hw); ctx.fill();
+      const d = D[n]; ctx.fillStyle = col(n, back); G.rrect(ctx, -d.hw, -d.hh - d.hw * 0.4, d.hw * 2, d.hh * 2 + d.hw * 0.8, d.hw); ctx.fill();
     });
-    // back limbs, core, front limbs
+    // back limbs, core, front limbs (painter's order)
     capsule('uArmR', true); capsule('lArmR', true); capsule('uLegR', true); capsule('lLegR', true);
-    capsule('pelvis'); capsule('uTorso');
     capsule('uLegL'); capsule('lLegL');
+    capsule('pelvis'); capsule('uTorso');
     bodyFrame(ctx, b.head, () => { ctx.fillStyle = col('head'); ctx.beginPath(); ctx.arc(0, 0, D.head.r, 0, 6.3); ctx.fill(); });
+    for (const a of rig.armor) if (a.worn) this.drawArmor(ctx, rig, a);
     this.drawBow(ctx, rig);
     capsule('uArmL'); capsule('lArmL');
-    // draw hand over the string
-    // armor
-    for (const a of rig.armor) if (a.worn) this.drawArmor(ctx, rig, a);
-    // stuck arrows
     for (const s of rig.stuck) this.drawStuck(ctx, s);
-    // balloons
     for (const bl of rig.balloons) this.drawBalloon(ctx, rig, bl);
     ctx.globalAlpha = 1;
     // floating health bar tracks the head's position and tilt
     if (rig.alive && !rig.isPlayer) {
       bodyFrame(ctx, b.head, () => {
-        const w = 0.9, h = 0.1, y = 0.5;
-        ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(-w / 2 - 0.03, y - 0.03, w + 0.06, h + 0.06);
-        ctx.fillStyle = RED; ctx.fillRect(-w / 2, y, w * clamp(rig.hp / rig.maxHp, 0, 1), h);
-        if (rig.poison) { ctx.fillStyle = '#58D68D'; ctx.fillRect(-w / 2, y - 0.05, w * clamp(rig.poison.t / 5, 0, 1), 0.03); }
-        if (rig.burn) { ctx.fillStyle = '#E67E22'; ctx.fillRect(-w / 2, y - 0.05, w * clamp(rig.burn.t / 3.2, 0, 1), 0.03); }
+        const w = 0.75, h = 0.14, y = D.head.r + 0.42;
+        ctx.fillStyle = 'rgba(120,20,20,0.55)'; ctx.fillRect(-w / 2, y, w, h);
+        ctx.fillStyle = '#E2323C'; ctx.fillRect(-w / 2, y, w * clamp(rig.hp / rig.maxHp, 0, 1), h);
+        if (rig.poison) { ctx.fillStyle = '#58D68D'; ctx.fillRect(-w / 2, y - 0.07, w * clamp(rig.poison.t / 5, 0, 1), 0.04); }
+        if (rig.burn) { ctx.fillStyle = '#E67E22'; ctx.fillRect(-w / 2, y - 0.07, w * clamp(rig.burn.t / 3.2, 0, 1), 0.04); }
       });
     }
     if (rig.stun > 0 && rig.alive) {
       const p = rig.head.getPosition();
-      ctx.strokeStyle = '#F4D03F'; ctx.lineWidth = 0.04; ctx.beginPath();
-      for (let i = 0; i < 3; i++) { const a = this.time * 8 + i * 2.1; ctx.moveTo(p.x + Math.cos(a) * 0.3, p.y + 0.3 + Math.sin(a) * 0.12); ctx.lineTo(p.x + Math.cos(a + 0.5) * 0.4, p.y + 0.3 + Math.sin(a + 0.5) * 0.18); }
+      ctx.strokeStyle = '#F4D03F'; ctx.lineWidth = 0.06; ctx.beginPath();
+      for (let i = 0; i < 3; i++) { const a = this.time * 8 + i * 2.1; ctx.moveTo(p.x + Math.cos(a) * 0.4, p.y + 0.45 + Math.sin(a) * 0.15); ctx.lineTo(p.x + Math.cos(a + 0.5) * 0.52, p.y + 0.45 + Math.sin(a + 0.5) * 0.22); }
       ctx.stroke();
     }
   };
 
+  // great helm (player: eye slits + breathing holes, heavy enemy: crusader cross), kettle hat, plated chest
   Game.drawArmor = function (ctx, rig, a) {
-    const flash = a.flash > 0;
-    const body = rig.b[a.part], fill = flash ? '#FFFFFF' : '#9A9A9A', dark = '#6e6e6e';
+    const flash = a.flash > 0, body = rig.b[a.part];
+    const steel = flash ? '#FFFFFF' : '#8C8C8C', light = flash ? '#FFFFFF' : '#A6A6A6', dark = '#3A3A3A';
     bodyFrame(ctx, body, () => {
       ctx.scale(rig.dir, 1);
       if (a.kind === 'helmetHeavy') {
-        ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(0, 0.02, 0.255, 0, 6.3); ctx.fill();
-        ctx.fillStyle = flash ? '#ddd' : dark; ctx.fillRect(-0.26, -0.03, 0.52, 0.04);          // brim
-        ctx.fillStyle = '#2d2d2d'; ctx.fillRect(0.0, 0.0, 0.25, 0.05);                         // visor slit (front)
-        ctx.fillStyle = flash ? '#fff' : '#b5b5b5'; ctx.fillRect(-0.03, 0.2, 0.06, 0.1);       // crest stub
-        ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.beginPath(); ctx.arc(-0.07, 0.1, 0.1, 0, 3.14); ctx.fill();
+        ctx.fillStyle = steel; G.rrect(ctx, -0.3, -0.27, 0.6, 0.6, 0.2); ctx.fill();
+        ctx.fillStyle = light; G.rrect(ctx, -0.3, 0.08, 0.6, 0.25, 0.16); ctx.fill();     // domed top
+        ctx.fillStyle = dark; G.rrect(ctx, -0.04, -0.02, 0.33, 0.1, 0.04); ctx.fill();    // visor band
+        if (rig.isPlayer) {
+          ctx.fillStyle = '#EDEDED'; ctx.fillRect(0.03, 0.02, 0.1, 0.025); ctx.fillRect(0.17, 0.02, 0.1, 0.025);
+          ctx.fillStyle = dark; for (const [hx, hy] of [[0.06, -0.12], [0.13, -0.12], [0.2, -0.12], [0.09, -0.19], [0.16, -0.19]]) { ctx.beginPath(); ctx.arc(hx, hy, 0.025, 0, 6.3); ctx.fill(); }
+        } else {
+          ctx.fillStyle = flash ? '#fff' : '#F39C12';
+          ctx.fillRect(0.1, -0.26, 0.08, 0.5); ctx.fillRect(-0.08, -0.01, 0.38, 0.08);   // crusader cross
+        }
       } else if (a.kind === 'helmetLight') {
-        ctx.fillStyle = flash ? '#fff' : '#A8A8A8';
-        ctx.beginPath(); ctx.moveTo(-0.23, 0.02); ctx.lineTo(0.23, 0.02); ctx.lineTo(0.02, 0.44); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = dark; ctx.fillRect(-0.26, 0.0, 0.52, 0.05);
+        ctx.fillStyle = steel;
+        ctx.beginPath(); ctx.moveTo(-0.33, 0.03); ctx.quadraticCurveTo(-0.24, 0.42, 0.02, 0.5); ctx.quadraticCurveTo(0.26, 0.42, 0.33, 0.03); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = light; ctx.fillRect(-0.36, 0.0, 0.72, 0.07);
+        ctx.fillStyle = dark; ctx.fillRect(-0.36, -0.02, 0.72, 0.025);
       } else if (a.kind === 'chest') {
-        ctx.fillStyle = fill; G.rrect(ctx, -0.19, -0.2, 0.38, 0.5, 0.07); ctx.fill();
-        ctx.fillStyle = flash ? '#ddd' : dark; ctx.fillRect(-0.19, -0.2, 0.38, 0.05);
-        ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(-0.12, -0.05, 0.05, 0.28);
+        // segmented plates (abs) like the reference armor upgrade
+        ctx.fillStyle = flash ? '#fff' : '#D2D2D2';
+        G.rrect(ctx, -0.27, 0.06, 0.54, 0.26, 0.12); ctx.fill();
+        for (let r = 0; r < 3; r++) for (const sx of [-0.12, 0.12]) { G.rrect(ctx, sx - 0.11, -0.04 - r * 0.12, 0.22, 0.1, 0.05); ctx.fill(); }
+        ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 0.015;
+        for (let r = 0; r < 3; r++) for (const sx of [-0.12, 0.12]) { G.rrect(ctx, sx - 0.11, -0.04 - r * 0.12, 0.22, 0.1, 0.05); ctx.stroke(); }
       }
     });
   };
 
+  // thick orange recurve; string pulled to the draw hand
   Game.drawBow = function (ctx, rig) {
     if (!rig.alive || !rig.b.lArmL) return;
     const s = rig.shoulder(), h = rig.hand('bow'), dh = rig.hand('draw');
     const ang = Math.atan2(h.y - s.y, h.x - s.x);
     const pull = rig.aim ? rig.aim.pull : 0;
     ctx.save(); ctx.translate(h.x, h.y); ctx.rotate(ang);
-    // draw-hand position in the bow's local frame (string nock)
     const dx = dh.x - h.x, dy = dh.y - h.y, c = Math.cos(-ang), sn = Math.sin(-ang);
     let nx = dx * c - dy * sn, ny = dx * sn + dy * c;
-    nx = clamp(nx, -0.75, 0); ny = clamp(ny, -0.3, 0.3);
-    const bend = 0.12 * (rig.aim ? rig.aim.pull : 0);
-    ctx.strokeStyle = rig.bowColor; ctx.lineWidth = 0.075; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(-bend, 0.78); ctx.quadraticCurveTo(0.45 - bend * 1.6, 0, -bend, -0.78); ctx.stroke();
-    ctx.strokeStyle = 'rgba(235,235,235,0.9)'; ctx.lineWidth = 0.018;
-    const sx = rig.aim ? nx : -0.04, sy = rig.aim ? ny : 0;
-    ctx.beginPath(); ctx.moveTo(-bend, 0.78); ctx.lineTo(sx, sy); ctx.lineTo(-bend, -0.78); ctx.stroke();
+    nx = clamp(nx, -0.9, 0); ny = clamp(ny, -0.35, 0.35);
+    const L = 0.95, bend = 0.16 * pull, tip = -0.02 - bend;
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(255,214,150,0.95)'; ctx.lineWidth = 0.03;
+    const sx = rig.aim && pull > 0.02 ? nx : tip - 0.02, sy = rig.aim && pull > 0.02 ? ny : 0;
+    ctx.beginPath(); ctx.moveTo(tip, L); ctx.lineTo(sx, sy); ctx.lineTo(tip, -L); ctx.stroke();
+    ctx.strokeStyle = rig.bowColor; ctx.lineWidth = 0.11;
+    ctx.beginPath(); ctx.moveTo(tip, L); ctx.bezierCurveTo(0.12, L * 0.85, 0.42 - bend, 0.45, 0.18, 0);
+    ctx.bezierCurveTo(0.42 - bend, -0.45, 0.12, -L * 0.85, tip, -L); ctx.stroke();
+    ctx.lineWidth = 0.17; ctx.beginPath(); ctx.moveTo(0.15, 0.2); ctx.lineTo(0.15, -0.2); ctx.stroke();   // grip
+    ctx.fillStyle = rig.bowColor; for (const k of [1, -1]) { ctx.beginPath(); ctx.arc(tip, L * k, 0.07, 0, 6.3); ctx.fill(); }
     if (rig.aim && pull > 0.02) {
-      // nocked arrow: tail on the string, tip just past the bow hand
-      const tipx = 0.14, ex = tipx - nx, ey = -ny, L = Math.hypot(ex, ey);
+      const tipx = 0.32, ex = tipx - nx, ey = -ny, len = Math.hypot(ex, ey);
       ctx.save(); ctx.translate(tipx, 0); ctx.rotate(Math.atan2(ey, ex));
-      G.drawArrowShape(ctx, rig.isPlayer ? rig.arrowType : 'default', Math.max(0.3, L));
+      G.drawArrowShape(ctx, rig.isPlayer ? rig.arrowType : 'default', Math.max(0.3, len));
       ctx.restore();
     }
     ctx.restore();
@@ -265,15 +265,15 @@
       const p = d.body.getPosition();
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(d.body.getAngle());
       if (d.kind === 'bow') {
-        ctx.strokeStyle = d.color; ctx.lineWidth = 0.075; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(0, 0.78); ctx.quadraticCurveTo(0.45, 0, 0, -0.78); ctx.stroke();
-        ctx.translate(-0.0, 0); ctx.rotate(0);
+        ctx.strokeStyle = d.color; ctx.lineWidth = 0.11; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(0, 0.95); ctx.bezierCurveTo(0.14, 0.8, 0.42, 0.45, 0.18, 0); ctx.bezierCurveTo(0.42, -0.45, 0.14, -0.8, 0, -0.95); ctx.stroke();
       } else {
         ctx.scale(d.dir, 1);
         const flash = false; ctx.fillStyle = '#9A9A9A';
-        if (d.piece === 'helmetHeavy') { ctx.beginPath(); ctx.arc(0, 0, 0.25, 0, 6.3); ctx.fill(); ctx.fillStyle = '#2d2d2d'; ctx.fillRect(0, -0.02, 0.25, 0.05); }
-        else if (d.piece === 'helmetLight') { ctx.beginPath(); ctx.moveTo(-0.23, -0.2); ctx.lineTo(0.23, -0.2); ctx.lineTo(0.02, 0.22); ctx.closePath(); ctx.fill(); }
-        else { G.rrect(ctx, -0.19, -0.25, 0.38, 0.5, 0.07); ctx.fill(); }
+        ctx.fillStyle = '#8C8C8C';
+        if (d.piece === 'helmetHeavy') { G.rrect(ctx, -0.3, -0.3, 0.6, 0.6, 0.2); ctx.fill(); ctx.fillStyle = '#3A3A3A'; ctx.fillRect(-0.04, -0.03, 0.33, 0.1); }
+        else if (d.piece === 'helmetLight') { ctx.beginPath(); ctx.moveTo(-0.33, -0.2); ctx.quadraticCurveTo(-0.24, 0.2, 0.02, 0.27); ctx.quadraticCurveTo(0.26, 0.2, 0.33, -0.2); ctx.closePath(); ctx.fill(); }
+        else { ctx.fillStyle = '#D2D2D2'; G.rrect(ctx, -0.27, -0.3, 0.54, 0.6, 0.12); ctx.fill(); }
       }
       ctx.restore();
     }
@@ -363,51 +363,65 @@
 
   /* ------------------------------------------------------------ diegetic tower HUD (screen space) */
   // returns hit rects in screen px
+  // returns hit rects in screen px. HUD sits in the middle column of the tower, slots hang on the sides.
   Game.towerUI = function () {
-    const S = this.S;
-    const T = C.TOWER_TOP;
-    const hp = { x: this.sx(2.0), y: this.sy(T - 0.2), w: 3.1 * S, h: 0.5 * S };
-    const sta = { x: this.sx(2.0), y: this.sy(T - 0.88), w: 3.1 * S, h: 0.5 * S };
-    const jump = { x: this.sx(2.0), y: this.sy(T - 1.6), w: 3.1 * S, h: 0.95 * S };
-    const slots = (this.slots || []).map((id, i) => ({ id, x: this.sx(0.15), y: this.sy(T - 0.15 - i * 0.84), w: 1.7 * S, h: 0.78 * S }));
-    return { jump, hp, sta, slots };
+    const S = this.S, T = C.TOWER_TOP, cx = (C.TOWER_X0 + C.TOWER_X1) / 2, bw = 1.45;
+    const R = (x, yTop, w, h) => ({ x: this.sx(x), y: this.sy(yTop), w: w * S, h: h * S });
+    const lives = R(cx - bw / 2, T - 0.38, bw, 0.3);
+    const hp = R(cx - bw / 2, T - 0.74, bw, 0.28);
+    const sta = R(cx - bw / 2, T - 1.1, bw, 0.28);
+    const jump = R(cx - 0.72, T - 1.6, 1.44, 0.72);
+    const slots = (this.slots || []).map((id, i) => {
+      const left = i < 3, row = i % 3, y = T - 0.95 - row * 0.68;
+      // radio inside the outer tower column, icon hanging outside the wall
+      const rx = left ? C.TOWER_X0 + 0.36 : C.TOWER_X1 - 0.36, ix = left ? C.TOWER_X0 - 0.75 : C.TOWER_X1 + 0.75;
+      const x0 = Math.min(rx, ix) - 0.5, x1 = Math.max(rx, ix) + 0.5;
+      return Object.assign(R(x0, y + 0.32, x1 - x0, 0.64), { id, rx: this.sx(rx), ix: this.sx(ix), cy: this.sy(y), left });
+    });
+    return { lives, jump, hp, sta, slots };
   };
 
+  function wing(ctx, x, y, s, k) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(k * s, s); ctx.beginPath();
+    ctx.moveTo(0, 0.4); ctx.quadraticCurveTo(0.2, -0.5, 1, -0.55); ctx.quadraticCurveTo(0.8, -0.2, 0.9, -0.1);
+    ctx.quadraticCurveTo(0.6, 0, 0.75, 0.15); ctx.quadraticCurveTo(0.4, 0.2, 0.55, 0.4); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+
   Game.drawTowerHud = function (ctx) {
-    const u = this.towerUI(), S = this.S, p = this.player;
-    const px = Math.max(9, Math.round(S * 0.42));
+    const u = this.towerUI(), S = this.S, p = this.player, F = G.HUD_FONT;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const bar = (r, frac, color, text) => {
-      ctx.fillStyle = 'rgba(0,0,0,0.5)'; G.rrect(ctx, r.x - 2, r.y - 2, r.w + 4, r.h + 4, 4); ctx.fill();
-      ctx.fillStyle = color; G.rrect(ctx, r.x, r.y, Math.max(0, r.w * clamp(frac, 0, 1)), r.h, 3); ctx.fill();
-      ctx.fillStyle = '#fff'; ctx.font = '800 ' + px + 'px system-ui, sans-serif';
+    // lives (wings)
+    const lc = u.lives.x + u.lives.w / 2, ly = u.lives.y + u.lives.h / 2;
+    ctx.fillStyle = '#F2F2F2'; ctx.font = Math.round(S * 0.26) + 'px ' + F;
+    ctx.fillText(String(p.lives), lc, ly + 1);
+    wing(ctx, lc - S * 0.17, ly, S * 0.17, -1); wing(ctx, lc + S * 0.17, ly, S * 0.17, 1);
+    const bar = (r, frac, color, back, text) => {
+      ctx.fillStyle = back; ctx.fillRect(r.x, r.y, r.w, r.h);
+      ctx.fillStyle = color; ctx.fillRect(r.x, r.y, Math.max(0, r.w * clamp(frac, 0, 1)), r.h);
+      ctx.fillStyle = '#fff'; ctx.font = Math.round(S * 0.23) + 'px ' + F;
       ctx.fillText(text, r.x + r.w / 2, r.y + r.h / 2 + 1);
     };
-    bar(u.hp, p.hp / p.maxHp, '#E74C3C', String(Math.ceil(p.hp)));
-    bar(u.sta, p.sta / this.stats.maxSta, '#3498DB', String(Math.ceil(p.sta)));
+    bar(u.hp, p.hp / p.maxHp, '#E2323C', '#7d2025', String(Math.ceil(p.hp)));
+    bar(u.sta, p.sta / this.stats.maxSta, '#3C8CF0', '#24467a', String(Math.ceil(p.sta)));
     // jump button
-    const j = u.jump, canJump = p.sta >= 5 && p.jumpCd <= 0;
-    ctx.fillStyle = this.jumpDown ? '#f2f2f2' : canJump ? '#FFFFFF' : '#8a8a8a';
-    G.rrect(ctx, j.x, j.y, j.w, j.h, 6); ctx.fill();
-    ctx.fillStyle = '#2b2b2b'; ctx.font = '900 ' + Math.round(px * 1.25) + 'px system-ui, sans-serif';
-    ctx.fillText('JUMP', j.x + j.w / 2, j.y + j.h * 0.38);
-    ctx.fillStyle = '#E74C3C'; ctx.font = '800 ' + Math.round(px * 0.75) + 'px system-ui, sans-serif';
-    ctx.fillText('5 STAMINA', j.x + j.w / 2, j.y + j.h * 0.76);
-    // arrow slot selectors on the left wall
+    const j = u.jump, canJump = p.sta >= 5 && p.jumpCd <= 0 && p.alive;
+    ctx.fillStyle = this.jumpDown ? '#BDBDBD' : canJump ? '#D4D4D4' : '#9a9a9a';
+    G.rrect(ctx, j.x, j.y, j.w, j.h, S * 0.05); ctx.fill();
+    ctx.fillStyle = '#7A7A7A'; ctx.font = Math.round(S * 0.25) + 'px ' + F;
+    ctx.fillText('JUMP', j.x + j.w / 2, j.y + j.h * 0.36);
+    ctx.fillStyle = '#3C8CF0'; ctx.font = Math.round(S * 0.2) + 'px ' + F;
+    ctx.fillText('5 STAMINA', j.x + j.w / 2, j.y + j.h * 0.72);
+    // arrow slot selectors
     u.slots.forEach((s, i) => {
-      const on = i === this.slot;
-      ctx.fillStyle = on ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.0)'; G.rrect(ctx, s.x, s.y, s.w, s.h, 5); ctx.fill();
-      ctx.save(); ctx.translate(s.x + s.w * 0.38, s.y + s.h / 2); ctx.rotate(-Math.PI / 5); ctx.scale(S * 0.62, S * 0.62);
-      G.drawArrowShape(ctx, s.id, s.id === 'minigun' ? 0.55 : 1); ctx.restore();
-      const cx = s.x + s.w * 0.84, cy = s.y + s.h / 2, r = S * 0.24;
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.3); ctx.stroke();
-      if (on) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, r * 0.55, 0, 6.3); ctx.fill(); }
+      const on = i === this.slot, r = S * 0.17;
+      ctx.strokeStyle = 'rgba(200,200,200,0.55)'; ctx.lineWidth = Math.max(1.5, S * 0.03);
+      ctx.beginPath(); ctx.moveTo(s.ix, s.cy); ctx.lineTo(s.rx, s.cy); ctx.stroke();
+      ctx.save(); ctx.translate(s.ix, s.cy); ctx.rotate(-Math.PI / 4); ctx.scale(S * 0.5, S * 0.5);
+      G.drawArrowShape(ctx, s.id, s.id === 'minigun' ? 0.6 : 0.9); ctx.restore();
+      ctx.fillStyle = '#5a5a5a'; ctx.beginPath(); ctx.arc(s.rx, s.cy, r * 1.25, 0, 6.3); ctx.fill();
+      ctx.strokeStyle = '#E6E6E6'; ctx.lineWidth = Math.max(2, S * 0.045); ctx.beginPath(); ctx.arc(s.rx, s.cy, r, 0, 6.3); ctx.stroke();
+      if (on) { ctx.fillStyle = '#CFCFCF'; ctx.beginPath(); ctx.arc(s.rx, s.cy, r * 0.62, 0, 6.3); ctx.fill(); }
     });
-    // lives pips
-    if (p.lives > 0) {
-      ctx.fillStyle = '#E74C3C';
-      for (let i = 0; i < p.lives; i++) { ctx.beginPath(); ctx.arc(u.hp.x + 6 + i * (S * 0.4), u.hp.y - S * 0.35, S * 0.13, 0, 6.3); ctx.fill(); }
-    }
   };
 
   /* ------------------------------------------------------------ aiming overlay, hints, messages */

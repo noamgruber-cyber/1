@@ -135,16 +135,17 @@
     for (const e of this.enemies) this.removeEnemy(e);
     this.enemies.length = 0;
     const L = G.LAYOUTS[0];
-    this.spawnEnemy('plain', L, Math.min(this.viewW * 0.69, C.TOWER_X1 + 15), 4.2, { frozen: true, grace: 0 });
+    this.spawnEnemy('plain', L, this.viewW * 0.7, 2.4, { frozen: true, grace: 0 });
   };
 
   /* ------------------------------------------------------------ platforms & enemies */
   Game.makePlatform = function (layout, ax, ay) {
     const blocks = [];
     for (const [gx, gy] of layout.blocks) {
-      const b = this.world.createBody({ type: 'static', position: V(ax + gx, ay - 0.5 + gy) });
+      const B = C.BLOCK;
+      const b = this.world.createBody({ type: 'static', position: V(ax + gx * B, ay - B / 2 + gy * B) });
       b.createFixture({
-        shape: new pl.Box(0.5, 0.5), density: 2, friction: 0.9, restitution: 0.1,
+        shape: new pl.Box(B / 2, B / 2), density: 2, friction: 0.9, restitution: 0.1,
         filterCategoryBits: G.CAT.TERRAIN, filterMaskBits: 0xffff,
         userData: { kind: 'terrain', block: true },
       });
@@ -201,11 +202,11 @@
 
   Game.waveSpec = function (n) {
     return {
-      count: Math.min(5, 1 + Math.floor(n / 2)),
+      count: n >= 25 ? 2 : 1,
       lightP: clamp((n - 1) * 0.12, 0, 0.5), heavyP: clamp((n - 3) * 0.07, 0, 0.45),
       err: Math.max(0.8, 7 - 0.45 * n) * Math.PI / 180,
       reload: [Math.max(2.0, 4.4 - 0.18 * n), Math.max(3.0, 6.2 - 0.25 * n)],
-      speed: [Math.min(20, 15 + 0.25 * n), Math.min(23, 18 + 0.3 * n)],
+      speed: [Math.min(13, 10.5 + 0.08 * n), Math.min(15, 12.5 + 0.1 * n)],
       hpScale: 1 + 0.05 * (n - 1),
       dmg: 10 + 1.1 * n,
       drawDur: Math.max(0.9, 1.45 - 0.035 * n),
@@ -215,25 +216,24 @@
   Game.spawnWave = function (n) {
     const ws = this.waveSpec(n);
     const spots = [];
-    const x0 = C.TOWER_X1 + 5.5, x1 = Math.max(x0 + 3, Math.min(this.viewW * 0.88, C.TOWER_X1 + 19) - 1.6);
+    const x0 = Math.max(C.TOWER_X1 + 3.2, this.viewW * 0.45), x1 = Math.max(x0 + 2, this.viewW * 0.86 - 1.2);
     for (let i = 0; i < ws.count; i++) {
       let best = null;
       for (let tries = 0; tries < 40; tries++) {
-        const ax = rand(x0, x1), ay = rand(3.0, 8.2);
+        const ax = rand(x0, x1), ay = rand(0.8, 5.6);
         if (spots.every((s) => Math.abs(s.ax - ax) > 4.2 || Math.abs(s.ay - ay) > 3.0)) { best = { ax, ay }; break; }
       }
-      if (!best) best = { ax: rand(x0, x1), ay: rand(3.0, 8.2) };
+      if (!best) best = { ax: rand(x0, x1), ay: rand(0.8, 5.6) };
       spots.push(best);
     }
     spots.forEach((s, i) => {
       const r = Math.random();
       const type = r < ws.heavyP ? 'heavy' : r < ws.heavyP + ws.lightP ? 'light' : 'plain';
       let layout = pick(G.LAYOUTS);
-      if (layout.id === 'stairs' && s.ay < 4.8) layout = G.LAYOUTS[0];
-      this.spawnEnemy(type, layout, s.ax, s.ay, { grace: rand(1.4, 3.2) + i * 0.6 });
+      if (layout.id === 'stairs' && s.ay < 1.8) layout = G.LAYOUTS[0];
+      this.spawnEnemy(type, layout, s.ax, s.ay, { grace: rand(0.9, 1.7) + i * 0.8 });
     });
-    this.banner('WAVE ' + n);
-    G.Audio.wave();
+    if (n % 5 === 0) { this.banner('WAVE ' + n); G.Audio.wave(); }
   };
 
   Game.banner = function (text) { this.msgs.push({ text, t: 2.2, max: 2.2 }); };
@@ -276,7 +276,7 @@
     if (rig.isPlayer) return this.playerDied();
     const e = rig.enemy;
     rig.die(); e.dead = true;
-    this.collapsePlatform(e.platform);
+    e.platform.collapseT = 1.0;          // the stones hold a beat, then crumble
     const p = rig.pos();
     G.Audio.kill();
     this.run.kills++;
@@ -317,7 +317,7 @@
     const p = this.player;
     if (!p.alive || p.jumpCd > 0 || p.sta < 5) { if (p.alive && p.sta < 5) G.Audio.deny(); return; }
     p.sta -= 5; p.jumpCd = 0.55; p.regenDelay = 0.4;
-    for (const n of G.RIG.PARTS) { const b = p.b[n], v = b.getLinearVelocity(); b.setLinearVelocity(V(v.x, Math.max(v.y, 10.5))); }
+    for (const n of G.RIG.PARTS) { const b = p.b[n], v = b.getLinearVelocity(); b.setLinearVelocity(V(v.x, Math.max(v.y, 8.5))); }
     G.Audio.jump();
     const q = p.pos();
     for (let i = 0; i < 6; i++) this.addPart(q.x + rand(-.4, .4), C.TOWER_TOP + 0.05, rand(-1.5, 1.5), rand(0.2, 1.4), rand(0.3, 0.6), rand(0.04, 0.09), '#9a9a9a', 'dust', 1);
@@ -364,7 +364,7 @@
   };
 
   // player launch speed for a given draw (0..1)
-  Game.arrowSpeed = function (charge) { return lerp(8, 21, Math.pow(Math.max(0, charge), 0.8)); };
+  Game.arrowSpeed = function (charge) { return lerp(5, 14.5, Math.pow(Math.max(0, charge), 0.8)); };
 
   Game.controlFrac = function () { return this.state === 'menu' ? C.CONTROL_FRAC : 0.5; };
 
@@ -452,13 +452,14 @@
   Game.updateFlow = function (dt) {
     if (this.state === 'run') {
       if (this.enemies.length === 0 && this.spawnDelay <= 0) {
-        this.wave++; this.run.wave = this.wave;
-        this.spawnDelay = 2.4; this.state = 'between';
-        G.UI.updateHud();
+        this.spawnDelay = 2.6; this.state = 'between';
       }
     } else if (this.state === 'between') {
       this.spawnDelay -= dt;
-      if (this.spawnDelay <= 0) { this.state = 'run'; this.spawnWave(this.wave); this.spawnDelay = 0; }
+      if (this.spawnDelay <= 0) {
+        this.wave++; this.run.wave = this.wave; G.UI.updateHud();
+        this.state = 'run'; this.spawnWave(this.wave); this.spawnDelay = 0;
+      }
     } else if (this.state === 'dying') {
       this.dyingT -= dt;
       if (this.dyingT <= 0) { this.state = 'over'; this.timeScale = 1; this.endRun(); }
@@ -470,8 +471,8 @@
         this.appleTimer = rand(6, 11);
         const r = Math.random();
         const type = r < 0.45 ? 'red' : r < 0.85 ? 'green' : 'gold';
-        const x = rand(C.TOWER_X1 + 3, C.TOWER_X1 + 9);
-        this.apples.push({ x, y: rand(5.2, 9.3), y0: 0, type, t: 0, ph: rand(0, 6.28), vx: rand(-0.5, 0.3), life: 16 });
+        const x = rand(C.TOWER_X1 + 2, this.viewW * 0.6);
+        this.apples.push({ x, y: rand(3.6, 7.6), y0: 0, type, t: 0, ph: rand(0, 6.28), vx: rand(-0.5, 0.3), life: 16 });
       }
     }
   };
@@ -508,6 +509,7 @@
       const d = this.debris[i]; d.life -= rdt;
       if (d.life <= 0 || d.body.getPosition().y < -9) { this.world.destroyBody(d.body); this.debris.splice(i, 1); }
     }
+    for (const pf of this.platforms) if (pf.collapseT > 0) { pf.collapseT -= rdt; if (pf.collapseT <= 0) this.collapsePlatform(pf); }
     for (const m of this.msgs) m.t -= rdt;
     this.msgs = this.msgs.filter((m) => m.t > 0);
     this.saveT = (this.saveT || 0) + rdt;

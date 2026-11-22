@@ -2,14 +2,15 @@
 (function (G) {
   G.C = {
     GRAV: -22,          // ragdoll gravity (m/s^2)
-    ARROW_G: 12,        // arrow gravity (lower = slower, floatier arcs)
+    ARROW_G: 7,         // arrow gravity (low = slow, floaty arcs like the reference)
     DT: 1 / 120,        // fixed physics step
-    VIEW_H: 12,         // visible world height in metres
-    Y_MIN: -1.0,        // world y at bottom of the screen
-    TOWER_TOP: 4.5,
-    TOWER_X0: -2.0,
-    TOWER_X1: 5.4,
-    PLAYER_X: 3.0,
+    VIEW_H: 10,         // visible world height in metres (a character is ~25% of the screen)
+    Y_MIN: -0.5,        // world y at bottom of the screen
+    TOWER_TOP: 2.6,     // top of the player's tower (~31% up the screen)
+    TOWER_X0: 2.2,      // tower = 3 columns of stone, floating in from the left edge
+    TOWER_X1: 6.1,
+    PLAYER_X: 4.15,
+    BLOCK: 0.8,         // enemy platform block size
     CONTROL_FRAC: 0.36, // left fraction of the screen that is the CONTROL AREA
     SEASON_GOAL: 70,
     AD_REWARD: 200,

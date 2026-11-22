@@ -10,7 +10,7 @@
     const a = {
       team: o.team, type: o.type, x: o.x, y: o.y, px: o.x, py: o.y,
       vx: Math.cos(o.phi) * o.speed, vy: Math.sin(o.phi) * o.speed,
-      len: mini ? 0.55 : o.type === 'shot' ? 1.15 : 1.0, dmg: o.dmg, owner: o.owner,
+      len: mini ? 0.7 : o.type === 'shot' ? 1.4 : 1.25, dmg: o.dmg, owner: o.owner,
       mini, heavy: o.type === 'shot', age: 0, trail: [], alive: true, tick: 0,
     };
     this.arrows.push(a);
@@ -156,7 +156,7 @@
 
     let hpDmg = dmg * mult;
     // knockback impulse at the point of impact
-    const imp = (a.mini ? 0.009 : a.heavy ? 0.12 : 0.022) * sp;
+    const imp = (a.mini ? 0.025 : a.heavy ? 0.3 : 0.07) * sp;
     body.applyLinearImpulse(V(dx * imp, dy * imp), V(pt.x, pt.y), true);
     // embed
     this.stick(a, body, pt, rig.stuck);
@@ -205,7 +205,7 @@
     piece.worn = false;
     const part = piece.part, b = rig.b[part], pos = b.getPosition();
     const body = this.world.createBody({ type: 'dynamic', position: pos, angle: b.getAngle() });
-    const dims = piece.kind === 'chest' ? [0.16, 0.26] : [0.22, 0.2];
+    const dims = piece.kind === 'chest' ? [0.27, 0.3] : [0.3, 0.3];
     body.createFixture({ shape: new pl.Box(dims[0], dims[1]), density: 1.5, friction: 0.5, restitution: 0.35, filterCategoryBits: G.CAT.DEBRIS, filterMaskBits: G.CAT.TERRAIN });
     const v = b.getLinearVelocity();
     body.setLinearVelocity(V(v.x + rand(-3, 3) - rig.dir * 1.5, v.y + rand(2, 6)));
@@ -250,7 +250,7 @@
   Game.updateFx = function (dt) {
     // solid rects for blood collision: tower + live platform blocks
     const solids = [{ x0: C.TOWER_X0, x1: C.TOWER_X1, y0: -20, y1: C.TOWER_TOP }];
-    for (const p of this.platforms) if (!p.collapsed) for (const b of p.blocks) { const q = b.getPosition(); solids.push({ x0: q.x - 0.5, x1: q.x + 0.5, y0: q.y - 0.5, y1: q.y + 0.5 }); }
+    for (const p of this.platforms) if (!p.collapsed) for (const b of p.blocks) { const q = b.getPosition(); const h = C.BLOCK / 2; solids.push({ x0: q.x - h, x1: q.x + h, y0: q.y - h, y1: q.y + h }); }
     const P = this.parts;
     for (let i = P.length - 1; i >= 0; i--) {
       const p = P[i];

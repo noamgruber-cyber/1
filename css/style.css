@@ -14,13 +14,13 @@ button { font: inherit; color: inherit; text-transform: inherit; border: 0; curs
 #hud { position: fixed; inset: 0; pointer-events: none; padding: 1.4vh calc(2vw + env(safe-area-inset-right, 0px)) 0 calc(1.5vw + env(safe-area-inset-left, 0px)); }
 #hud > * { pointer-events: auto; }
 #top-left { position: absolute; left: calc(1.5vw + env(safe-area-inset-left, 0px)); top: 1.4vh; display: flex; flex-direction: column; align-items: flex-start; gap: .8vh; pointer-events: none; }
-.skullrow { display: flex; align-items: center; gap: .5em; font-size: 1.5em; color: #F5B041; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
+.skullrow { display: flex; align-items: center; gap: .4em; font-size: 1.2em; color: #F2F2F2; font-family: Rye, Rockwell, Georgia, serif; font-weight: 400; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
 #skull-ico .sk { width: 1.2em; height: 1.2em; margin: 0; }
 #ad-btn { display: none; align-items: center; gap: .3em; background: #58D68D; color: #10331c; padding: .45em .8em; border-radius: .5em; font-size: 1.05em; pointer-events: auto; box-shadow: 0 .2em 0 rgba(0,0,0,.3); }
 #ad-btn .sk { margin: 0; }
-#top-right { position: absolute; right: calc(2vw + env(safe-area-inset-right, 0px)); top: 1.4vh; text-align: right; font-size: 1.35em; pointer-events: none; text-shadow: 0 2px 0 rgba(0,0,0,.4); display: flex; flex-direction: column; gap: .25em; }
+#top-right { position: absolute; right: calc(2vw + env(safe-area-inset-right, 0px)); top: 1.4vh; text-align: right; font-size: 1.15em; font-family: Rye, Rockwell, Georgia, serif; font-weight: 400; pointer-events: none; text-shadow: 0 2px 0 rgba(0,0,0,.4); display: flex; flex-direction: column; gap: .25em; }
 #score { color: #fff; } #wave { color: #bbb; } #season { color: #F5B041; }
-#pause-btn { position: fixed; right: calc(2vw + env(safe-area-inset-right, 0px)); bottom: 3vh; width: 3.4em; height: 3.4em; background: rgba(255,255,255,.14); border: 2px solid rgba(255,255,255,.35); border-radius: .35em; font-size: 1.1em; letter-spacing: -.1em; }
+#pause-btn { position: fixed; right: calc(2vw + env(safe-area-inset-right, 0px)); bottom: 4vh; width: 2.6em; height: 2.6em; background: #555; color: #8a8a8a; border-radius: .25em; font-size: 1.1em; letter-spacing: -.1em; }
 body[data-state="menu"] .run-only { display: none !important; }
 body:not([data-state="menu"]) .menu-only { display: none !important; }
 body[data-state="menu"] #ad-btn { display: inline-flex; }
