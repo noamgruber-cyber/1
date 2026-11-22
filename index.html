@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ragdoll Archery Defense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#333333">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-state="menu">
+<div id="safe-probe"></div>
+<canvas id="game"></canvas>
+
+<!-- in-game HUD / top bar (shared with the menu) -->
+<div id="hud">
+  <div id="top-left">
+    <div class="skullrow"><span id="skull-ico"></span><b id="skull-n">0</b></div>
+    <button id="ad-btn" aria-label="Watch ad for skulls"></button>
+  </div>
+  <div id="top-right">
+    <div id="season" class="menu-only"></div>
+    <div id="score"></div>
+    <div id="wave" class="run-only"></div>
+  </div>
+  <button id="pause-btn" class="run-only" aria-label="Pause">||</button>
+</div>
+
+<!-- main menu / upgrade hub: the left third is left empty so the live CONTROL AREA stays playable -->
+<div id="menu">
+  <div id="col-center" class="col"></div>
+  <div id="col-right" class="col"></div>
+</div>
+
+<div id="modal"></div>
+<div id="rotate"><div>ROTATE YOUR DEVICE<br><small>this game is played in landscape</small></div></div>
+
+<script src="vendor/planck.min.js"></script>
+<script src="js/util.js"></script>
+<script src="js/data.js"></script>
+<script src="js/save.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/rig.js"></script>
+<script src="js/game.js"></script>
+<script src="js/arrows.js"></script>
+<script src="js/render.js"></script>
+<script src="js/input.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
