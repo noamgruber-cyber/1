@@ -96,7 +96,7 @@
     const S = G.Save;
     this.stats = {
       maxHp: S.value('health'), maxSta: S.value('stamina'), regen: S.value('refresh'),
-      pullRate: S.value('pull') * 0.24, dmg: S.value('damage'),
+      pullRate: S.value('pull') * 0.45, dmg: S.value('damage'),
       lives: S.value('lives'), armor: S.value('armor'),
     };
   };
@@ -323,43 +323,30 @@
     for (let i = 0; i < 6; i++) this.addPart(q.x + rand(-.4, .4), C.TOWER_TOP + 0.05, rand(-1.5, 1.5), rand(0.2, 1.4), rand(0.3, 0.6), rand(0.04, 0.09), '#9a9a9a', 'dust', 1);
   };
 
+  // Drawing the bow: drag back from where you touched. Drag direction = angle, drag length = how far the
+  // string is pulled (power). No charge timer: the string follows the finger (capped by PULL SPEED).
   Game.updatePlayer = function (dt) {
     const p = this.player, a = p.aimState, st = this.stats;
     if (!p.alive) return;
     p.jumpCd = Math.max(0, p.jumpCd - dt);
     const type = G.ARROW_BY_ID[p.arrowType] || G.ARROWS[0];
     if (a.active) {
-      if (p.sta > 0.5) {
-        if (!a.drawing) { a.drawing = true; G.Audio.draw(); }
-        const before = a.charge;
-        a.charge = Math.min(1, a.charge + st.pullRate * dt);
-        p.sta -= (before < 1 ? 10 : 3) * type.sta * dt;
-        p.regenDelay = 0.5;
-      } else this.releaseAim();   // out of stamina: forced release with whatever charge exists
-    } else {
-      a.charge = 0;
-    }
+      const target = a.target || 0;
+      if (target > a.charge) {
+        const room = p.sta / (10 * type.sta);                 // stamina limits how far you can pull
+        const inc = Math.min(target - a.charge, st.pullRate * dt, Math.max(0, room));
+        a.charge += inc; p.sta -= inc * 10 * type.sta;
+        if (inc > 0 && !a.drawing) { a.drawing = true; G.Audio.draw(); }
+      } else a.charge = target;
+      p.regenDelay = 0.5;
+    } else a.charge = 0;
     p.sta = clamp(p.sta, 0, st.maxSta);
     if (!a.active) {
       p.regenDelay -= dt;
       if (p.regenDelay <= 0) p.sta = Math.min(st.maxSta, p.sta + st.regen * dt);
     }
-    if (a.active) {
-      let phi = a.phi;
-      if (G.Save.d.settings.magnet && this.state !== 'menu') {
-        // gentle magnet: when the aim is already close to a ballistic solution, pull it the rest of the way
-        const v = this.arrowSpeed(Math.max(a.charge, 0.25)), h = p.hand('bow');
-        let best = null;
-        for (const e of this.enemies) {
-          if (!e.rig.alive) continue;
-          const t = e.rig.torso.getPosition(), ideal = this.solveAngle(h.x, h.y, t.x, t.y, v), d = Math.abs(ideal - phi);
-          if (d < 0.09 && (!best || d < best.d)) best = { d, ideal };
-        }
-        if (best) phi += (best.ideal - phi) * 0.65;
-      }
-      a.phiEff = phi;
-      p.setAim(phi, a.charge);
-    } else p.setAim(a.phi * 0.5 + 0.1, 0);
+    if (a.active) p.setAim(a.phi, a.charge);
+    else p.setAim(a.phi * 0.5 + 0.1, 0);
     p.aim.phi += p.aimErr;
   };
 
@@ -371,30 +358,30 @@
   Game.beginAim = function (pid, x, y) {
     const a = this.player.aimState;
     if (!this.player.alive || this.modal) return;
-    if (this.player.sta < 6) { G.Audio.deny(); }
-    a.active = true; a.pid = pid; a.ax = x; a.ay = y; a.x = x; a.y = y; a.charge = 0; a.drawing = false;
-    a.moved = false;
+    if (this.player.sta < 4) G.Audio.deny();
+    a.active = true; a.pid = pid; a.ax = x; a.ay = y; a.x = x; a.y = y; a.charge = 0; a.target = 0; a.drawing = false;
   };
   Game.moveAim = function (x, y) {
     const a = this.player.aimState; a.x = x; a.y = y;
+    const full = this.H * 0.24;            // drag this far for a full draw
     let dx = a.ax - x, dy = y - a.ay;
-    const len = Math.hypot(dx, dy), MAX = 90;
-    if (len > MAX) {            // floating anchor: it follows the finger so you never run out of screen
-      const k = (len - MAX) / len;
+    const len = Math.hypot(dx, dy);
+    if (len > full) {                      // past full draw the touch point trails the finger
+      const k = (len - full) / len;
       a.ax -= dx * k; a.ay += dy * k; dx = a.ax - x; dy = y - a.ay;
     }
-    if (Math.hypot(dx, dy) > 6) {
-      a.moved = true;
+    a.target = clamp(Math.hypot(dx, dy) / full, 0, 1);
+    if (Math.hypot(dx, dy) > 8) {
       const sens = G.Save.d.settings.sens;
-      a.phi = clamp(Math.atan2(dy * sens, dx), -0.55, 1.5);
+      a.phi = clamp(Math.atan2(dy * sens, dx), -0.7, 1.5);
     }
   };
   Game.releaseAim = function () {
     const p = this.player, a = p.aimState;
     if (!a.active) return;
     a.active = false;
-    if (a.charge >= 0.12 && p.alive) this.playerFire(a.charge);
-    a.charge = 0; a.drawing = false;
+    if (a.charge >= 0.08 && p.alive) this.playerFire(a.charge);
+    a.charge = 0; a.target = 0; a.drawing = false;
   };
 
   /* ------------------------------------------------------------ enemy AI */

@@ -168,7 +168,11 @@
     rig.tint[part] = Math.min(1, rig.tint[part] + (mult < 1 ? 0.55 : 0.4));
     if (dead) { G.Audio.hit(false); return; }
     G.Audio.hit(a.heavy);
-    if (isHead && !piece) { G.Audio.headshot(); this.popups.push({ x: pt.x, y: pt.y + 0.6, text: 'HEADSHOT', t: 0.9, max: 0.9 }); }
+    if (isHead && !piece) {
+      // no helmet: a headshot is instantly lethal
+      hpDmg = Math.max(hpDmg, rig.hp + 1);
+      G.Audio.headshot(); this.popups.push({ x: pt.x, y: pt.y + 0.6, text: 'HEADSHOT', t: 0.9, max: 0.9 });
+    }
     if (mult < 1) { // limb hit throws the aim off for a moment
       const arm = part.indexOf('Arm') >= 0;
       rig.flinch = 1;

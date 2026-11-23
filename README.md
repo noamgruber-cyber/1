@@ -20,7 +20,7 @@ python3 -m http.server 8000   # any static server works; opening index.html dire
 | Switch arrow | Radio buttons on the tower's left wall | `1`–`6` |
 | Pause | `||` bottom-right | `Esc` / `P` |
 
-Shooting from the CONTROL AREA in the menu starts the run. Drag direction sets the angle, hold time sets power (**PULL SPEED**); drawing and firing cost stamina.
+Shooting from the CONTROL AREA in the menu starts the run. Drag back like a real bow: drag direction sets the angle, drag length sets how far the string is pulled (power). There is no aiming UI. Pulling and firing cost stamina; **PULL SPEED** caps how fast the string can follow your finger. A headshot on a character without a helmet is instantly lethal.
 
 ## What's implemented (maps to the spec)
 

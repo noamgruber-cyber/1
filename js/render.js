@@ -465,20 +465,6 @@
       ctx.fillStyle = '#fff'; ctx.font = '800 ' + f * 0.75 + 'px system-ui, sans-serif';
       ctx.fillText('SHOOTING REQUIRES STAMINA', cx, H * 0.275);
     }
-    if (a.active && a.moved !== undefined) {
-      // slingshot anchor + charge ring
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(a.ax, a.ay, 16, 0, 6.3); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(a.ax, a.ay); ctx.lineTo(a.x, a.y); ctx.stroke();
-      ctx.strokeStyle = this.player.sta > 6 ? '#F5B041' : '#E74C3C'; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.arc(a.ax, a.ay, 22, -Math.PI / 2, -Math.PI / 2 + a.charge * 6.283); ctx.stroke();
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(a.x, a.y, 9, 0, 6.3); ctx.fill();
-    }
-    // dotted trajectory (onboarding in menu / optional assist)
-    if (a.active && (this.state === 'menu' || G.Save.d.settings.guide)) {
-      const pts = this.trajectory();
-      if (pts) { ctx.fillStyle = 'rgba(255,255,255,0.7)'; pts.forEach((q, i) => { ctx.globalAlpha = 1 - i / pts.length; ctx.beginPath(); ctx.arc(this.sx(q[0]), this.sy(q[1]), 2.4, 0, 6.3); ctx.fill(); }); ctx.globalAlpha = 1; }
-    }
     // floating text
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     for (const q of this.popups) {
